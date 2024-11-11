@@ -22,13 +22,12 @@ export const initSocket = (server) => {
     console.log(users);
     socket.emit("hellouser", "Welcome to the server!");
 
-    socket.on("sendmessage", (data) => {
-      socket.broadcast.emit("hello", data.message);
-      console.log(data.message);
-    });
+    // socket.on("sendmessage", (data) => {
+    //   socket.broadcast.emit("hello", data.message);
+    //   console.log(data.message);
+    // });
 
     socket.on("sendmessage", (data) => {
-      console.log(data);
       io.to(users[data.userId].socketId).emit("messageTouser", {
         message: data.message,
       });
