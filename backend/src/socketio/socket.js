@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import { auth, roles } from "../middleware/auth.js";
 
 export const initSocket = (server) => {
   const io = new Server(server, {
@@ -6,17 +7,12 @@ export const initSocket = (server) => {
       origin: "*",
     },
   });
-  let userId;
-  io.use((socket, next) => {
-    if (!socket.handshake.auth.token) {
-      return next(new Error("Token is required"));
-    }
-    userId = socket.handshake.auth.token;
-    next();
-  });
+
+  io.use(auth(Object.values(roles)));
 
   let users = {};
   io.on("connection", (socket) => {
+    let userId = socket.user.id
     // console.log("New client connected:", socket.id);
     users[userId] = { socketId: socket.id };
     console.log(users);

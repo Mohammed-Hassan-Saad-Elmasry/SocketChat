@@ -1,38 +1,35 @@
-import jwt from 'jsonwebtoken';
-import { asyncHandler } from '../utils/errorhandling.js';
-import {authModel} from '../../db/model/auth.model.js';
-
-
+import jwt from "jsonwebtoken";
+import { authModel } from "../../db/model/auth.model.js";
 export const roles = {
-    Admin: "Admin",
-    User: "User",
+  Admin: "Admin",
+  User: "User",
 };
 export const auth = (accessRoles = []) => {
-    return asyncHandler(async (req, res, next) => {
-        const { authorization } = req.headers;
+  return async (socket, next) => {
+    try {
+      const { token } = socket.handshake.auth;
 
-        if (!authorization || !authorization.startsWith("Bearer ")) {
-            return next(new Error("In-valid Bearer Key", { cause: 400 }));
-        }
-        const token = authorization.split("Bearer ")[1];
-        if (!token) {
-            return next(new Error(" In-valid Token", { cause: 400 }));
-        }
-        const decoded = jwt.verify(token, "Hamo");
-        if (!decoded?.id) {
-            return next(new Error("invalid token payload  ", { cause: 400 }));
-        }
+      if (!token) {
+        return next(new Error("In-valid Token"));
+      }
 
-        const user = await authModel.findById({ _id: decoded.id })
-        if (!user) {
-            return next(new Error("not register account  ", { cause: 404 }));
-        }
+      const decoded = jwt.verify(token, "Hamo");
+      if (!decoded?.id) {
+        return next(new Error("Invalid token payload"));
+      }
 
-        if (!accessRoles.includes(user.role)) {
-            return next(new Error("not authorized user  ", { cause: 403 }));
-        }
-        req.user = user;
-        next();
-    });
+      const user = await authModel.findById(decoded.id);
+      if (!user) {
+        return next(new Error("Account not registered"));
+      }
+
+      if (!accessRoles.includes(user.role)) {
+        return next(new Error("User not authorized"));
+      }
+      socket.user = user;
+      next();
+    } catch (error) {
+      next(new Error("Authentication Error"));
+    }
+  };
 };
-
