@@ -37,5 +37,5 @@ socket.on("messageTouser", (message) => {
   console.log("Received message: ", message);
 });
 socket.on("connect_error", (err) => {
-  console.log("Connection failed:", err.message); // سيساعدك في معرفة ما إذا كان هناك خطأ
+  console.log("Connection failed:", err.message); 
 });
